@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/benbeisheim/MineChess/backend/internal/controller"
-	"github.com/benbeisheim/MineChess/backend/internal/middleware"
-	"github.com/benbeisheim/MineChess/backend/internal/service"
+	"github.com/benbeisheim/minechess-backend/internal/controller"
+	"github.com/benbeisheim/minechess-backend/internal/middleware"
+	"github.com/benbeisheim/minechess-backend/internal/service"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/websocket/v2"

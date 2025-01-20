@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/benbeisheim/MineChess/backend/internal/ws"
+	"github.com/benbeisheim/minechess-backend/internal/ws"
 	"github.com/gofiber/websocket/v2"
 )
 

@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/benbeisheim/MineChess/backend/internal/model"
-	"github.com/benbeisheim/MineChess/backend/internal/service"
-	"github.com/benbeisheim/MineChess/backend/internal/ws"
+	"github.com/benbeisheim/minechess-backend/internal/model"
+	"github.com/benbeisheim/minechess-backend/internal/service"
+	"github.com/benbeisheim/minechess-backend/internal/ws"
 	"github.com/gofiber/websocket/v2"
 )
 

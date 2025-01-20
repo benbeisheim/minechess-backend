@@ -3,7 +3,7 @@ package controller
 import (
 	"fmt"
 
-	"github.com/benbeisheim/MineChess/backend/internal/service"
+	"github.com/benbeisheim/minechess-backend/internal/service"
 	"github.com/gofiber/fiber/v2"
 )
 
