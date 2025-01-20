@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/benbeisheim/minechess-backend/internal/controller"
 	"github.com/benbeisheim/minechess-backend/internal/middleware"
@@ -17,13 +18,27 @@ func main() {
 
 	app := fiber.New()
 
-	// Then add the CORS middleware
+	// Get environment variables
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "3000" // default port for local development
+	}
+
+	// Get CORS origins
+	allowedOrigins := os.Getenv("CORS_ORIGIN")
+	if allowedOrigins == "" {
+		allowedOrigins = "http://localhost:5173" // default for local development
+	}
+
+	// Setup CORS
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "http://localhost:5173", // Your React app's exact origin
+		AllowOrigins:     allowedOrigins,
 		AllowHeaders:     "Origin, Content-Type, Accept",
 		AllowMethods:     "GET, POST, OPTIONS",
 		AllowCredentials: true,
+		ExposeHeaders:    "Upgrade",
 	}))
+
 	// Debugging middleware
 	app.Use(func(c *fiber.Ctx) error {
 		fmt.Println("--------------------------------")
