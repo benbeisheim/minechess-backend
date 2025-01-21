@@ -484,8 +484,8 @@ func (g *Game) filterLegalMoves(psuedoMoves []SimpleMove) []SimpleMove {
 	for _, move := range psuedoMoves {
 		fmt.Println("Checking move", move)
 		// record current state
-		fromState := g.state.Board.Board[move.From.Y][move.From.X]
-		toState := g.state.Board.Board[move.To.Y][move.To.X]
+		fromState := *g.state.Board.Board[move.From.Y][move.From.X]
+		toState := *g.state.Board.Board[move.To.Y][move.To.X]
 		// if king move, set king position
 		if fromState.Type == King {
 			switch g.state.ToMove {
@@ -497,16 +497,15 @@ func (g *Game) filterLegalMoves(psuedoMoves []SimpleMove) []SimpleMove {
 		}
 		fmt.Println("Executing temp move")
 		// execute temp move
-		g.state.Board.Board[move.To.Y][move.To.X] = fromState
+		g.state.Board.Board[move.To.Y][move.To.X] = &fromState
 		g.state.Board.Board[move.From.Y][move.From.X] = nil
 		// check if king is in check
 		if !isKingInCheck(g.state.Board, g.state.ToMove) {
 			legalMoves = append(legalMoves, move)
 		}
 		// revert temp move
-		fmt.Println("Reverting temp move from:", fromState.Position, fromState.Type, "to:", toState.Position, toState.Type)
-		g.state.Board.Board[move.From.Y][move.From.X] = fromState
-		g.state.Board.Board[move.To.Y][move.To.X] = toState
+		g.state.Board.Board[move.From.Y][move.From.X] = &fromState
+		g.state.Board.Board[move.To.Y][move.To.X] = &toState
 		// if king move, revert king position
 		if fromState.Type == King {
 			switch g.state.ToMove {
