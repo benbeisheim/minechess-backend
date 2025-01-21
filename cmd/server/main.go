@@ -68,7 +68,7 @@ func main() {
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
 		// Enable all origins during development
-		Origins: []string{"http://localhost:5173"},
+		Origins: []string{"http://localhost:5173", "https://minechess-frontend.vercel.app", "https://minechess-frontend-3i7ths496-benbeisheims-projects.vercel.app"},
 	}))
 
 	// Set up REST routes
