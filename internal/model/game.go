@@ -504,7 +504,7 @@ func (g *Game) filterLegalMoves(psuedoMoves []SimpleMove) []SimpleMove {
 			legalMoves = append(legalMoves, move)
 		}
 		// revert temp move
-		fmt.Println("Reverting temp move")
+		fmt.Println("Reverting temp move from:", fromState.Position, fromState.Type, "to:", toState.Position, toState.Type)
 		g.state.Board.Board[move.From.Y][move.From.X] = fromState
 		g.state.Board.Board[move.To.Y][move.To.X] = toState
 		// if king move, revert king position
