@@ -250,7 +250,6 @@ func (g *Game) MakeMove(move WSMove) error {
 */
 func (g *Game) validateMove(move WSMove) error {
 	fmt.Println("Validating move in model/game", move)
-	fmt.Println("legal moves", g.getLegalMovesForPiece(g.state.Board.Board[move.From.Y][move.From.X]))
 	// TODO: Implement move validation
 	if move.From.X < 0 || move.From.X > 7 || move.From.Y < 0 || move.From.Y > 7 || move.To.X < 0 || move.To.X > 7 || move.To.Y < 0 || move.To.Y > 7 {
 		return errors.New("invalid move, out of bounds")
@@ -496,6 +495,7 @@ func (g *Game) filterLegalMoves(psuedoMoves []SimpleMove) []SimpleMove {
 				g.state.Board.BlackKingPosition = move.To
 			}
 		}
+		fmt.Println("Executing temp move")
 		// execute temp move
 		g.state.Board.Board[move.To.Y][move.To.X] = fromState
 		g.state.Board.Board[move.From.Y][move.From.X] = nil
@@ -504,6 +504,7 @@ func (g *Game) filterLegalMoves(psuedoMoves []SimpleMove) []SimpleMove {
 			legalMoves = append(legalMoves, move)
 		}
 		// revert temp move
+		fmt.Println("Reverting temp move")
 		g.state.Board.Board[move.From.Y][move.From.X] = fromState
 		g.state.Board.Board[move.To.Y][move.To.X] = toState
 		// if king move, revert king position
@@ -515,6 +516,7 @@ func (g *Game) filterLegalMoves(psuedoMoves []SimpleMove) []SimpleMove {
 				g.state.Board.BlackKingPosition = fromState.Position
 			}
 		}
+		fmt.Println("Reverted temp move")
 	}
 	return legalMoves
 }
