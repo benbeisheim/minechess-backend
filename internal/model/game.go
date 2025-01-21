@@ -332,7 +332,7 @@ func (g *Game) executeMove(move WSMove) error {
 		}
 		g.state.Board.Board[move.To.Y][move.To.X] = nil
 		if isKingInCheck(g.state.Board, g.state.ToMove) {
-			result := "bombmate"
+			result := getOtherColor(g.state.ToMove) + " wins by Bombmate"
 			g.state.Resolve = &result
 		}
 	}
@@ -348,10 +348,10 @@ func (g *Game) executeMove(move WSMove) error {
 	if g.isNoLegalMoves(g.state.ToMove) {
 		switch g.state.IsCheck {
 		case true:
-			result := "checkmate"
+			result := getOtherColor(g.state.ToMove) + " wins by Checkmate"
 			g.state.Resolve = &result
 		case false:
-			result := "stalemate"
+			result := "draw by Stalemate"
 			g.state.Resolve = &result
 		}
 	}
@@ -365,6 +365,13 @@ func (g *Game) executeMove(move WSMove) error {
 	go g.broadcastState()
 
 	return nil
+}
+
+func getOtherColor(color string) string {
+	if color == "white" {
+		return "black"
+	}
+	return "white"
 }
 
 func isKingInCheck(boardState *BoardState, color string) bool {
