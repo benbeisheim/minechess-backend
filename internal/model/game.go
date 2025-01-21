@@ -249,6 +249,8 @@ func (g *Game) MakeMove(move WSMove) error {
 	}
 */
 func (g *Game) validateMove(move WSMove) error {
+	fmt.Println("Validating move in model/game", move)
+	fmt.Println("legal moves", g.getLegalMovesForPiece(g.state.Board.Board[move.From.Y][move.From.X]))
 	// TODO: Implement move validation
 	if move.From.X < 0 || move.From.X > 7 || move.From.Y < 0 || move.From.Y > 7 || move.To.X < 0 || move.To.X > 7 || move.To.Y < 0 || move.To.Y > 7 {
 		return errors.New("invalid move, out of bounds")
@@ -655,6 +657,7 @@ func abs(x int) int {
 }
 
 func (g *Game) handleCastle(move WSMove, ply Ply) Ply {
+	fmt.Println("Handling castle for move", move)
 	// TODO: Implement castle handling
 	// assume only called for king move
 	if abs(move.From.X-move.To.X) == 2 {
@@ -663,6 +666,7 @@ func (g *Game) handleCastle(move WSMove, ply Ply) Ply {
 			rook := g.state.Board.Board[move.From.Y][0]
 			g.state.Board.Board[move.From.Y][0] = nil
 			g.state.Board.Board[move.From.Y][3] = rook
+			rook.HasMoved = true
 			ply.CastleRookMove = &CastleRookMove{
 				From: Position{X: 0, Y: move.From.Y},
 				To:   Position{X: 3, Y: move.From.Y},
@@ -672,6 +676,7 @@ func (g *Game) handleCastle(move WSMove, ply Ply) Ply {
 			rook := g.state.Board.Board[move.From.Y][7]
 			g.state.Board.Board[move.From.Y][7] = nil
 			g.state.Board.Board[move.From.Y][5] = rook
+			rook.HasMoved = true
 			ply.CastleRookMove = &CastleRookMove{
 				From: Position{X: 7, Y: move.From.Y},
 				To:   Position{X: 5, Y: move.From.Y},
