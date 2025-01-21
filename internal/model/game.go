@@ -620,6 +620,19 @@ func (g *Game) getPsuedoKingMoves(piece *Piece) []SimpleMove {
 			kingMoves = append(kingMoves, SimpleMove{From: piece.Position, To: targetPos})
 		}
 	}
+	if !piece.HasMoved {
+		// check for castle moves
+		if g.state.Board.Board[piece.Position.Y][0] != nil && g.state.Board.Board[piece.Position.Y][0].Type == Rook && !g.state.Board.Board[piece.Position.Y][0].HasMoved {
+			if g.state.Board.Board[piece.Position.Y][1] == nil && g.state.Board.Board[piece.Position.Y][2] == nil && g.state.Board.Board[piece.Position.Y][3] == nil {
+				kingMoves = append(kingMoves, SimpleMove{From: piece.Position, To: Position{X: piece.Position.X - 2, Y: piece.Position.Y}})
+			}
+		}
+		if g.state.Board.Board[piece.Position.Y][7] != nil && g.state.Board.Board[piece.Position.Y][7].Type == Rook && !g.state.Board.Board[piece.Position.Y][7].HasMoved {
+			if g.state.Board.Board[piece.Position.Y][5] == nil && g.state.Board.Board[piece.Position.Y][6] == nil {
+				kingMoves = append(kingMoves, SimpleMove{From: piece.Position, To: Position{X: piece.Position.X + 2, Y: piece.Position.Y}})
+			}
+		}
+	}
 	return kingMoves
 }
 
