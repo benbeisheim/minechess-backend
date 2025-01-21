@@ -480,8 +480,10 @@ func (g *Game) getLegalMovesForPiece(piece *Piece) []SimpleMove {
 
 func (g *Game) filterLegalMoves(psuedoMoves []SimpleMove) []SimpleMove {
 	// TODO: Implement move filtering
+	fmt.Println("Filtering legal moves for piece", g.state.Board.Board[psuedoMoves[0].From.Y][psuedoMoves[0].From.X])
 	legalMoves := []SimpleMove{}
 	for _, move := range psuedoMoves {
+		fmt.Println("Checking move", move)
 		// record current state
 		fromState := g.state.Board.Board[move.From.Y][move.From.X]
 		toState := g.state.Board.Board[move.To.Y][move.To.X]
