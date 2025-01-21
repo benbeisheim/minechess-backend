@@ -26,8 +26,9 @@ func main() {
 
 	// Get CORS origins
 	allowedOrigins := os.Getenv("CORS_ORIGIN")
+	fmt.Println("Allowed origins:", allowedOrigins)
 	if allowedOrigins == "" {
-		allowedOrigins = "http://localhost:5173" // default for local development
+		allowedOrigins = "http://localhost:5173, https://minechess-frontend.vercel.app, https://minechess-frontend-3i7ths496-benbeisheims-projects.vercel.app"
 	}
 
 	// Setup CORS
