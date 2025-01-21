@@ -26,7 +26,13 @@ func (wsc *WebSocketController) HandleConnection(c *websocket.Conn) {
 	fmt.Println("Handling connection")
 	// Extract game ID and player ID from context
 	gameID := c.Params("gameId")
-	playerID := c.Locals("playerID").(string)
+	playerID := c.Query("playerId")
+
+	if playerID == "" {
+		wsc.sendError(c, "playerId is required")
+		c.Close()
+		return
+	}
 
 	// Register this connection with the game
 	if err := wsc.gameService.RegisterConnection(gameID, playerID, c); err != nil {
