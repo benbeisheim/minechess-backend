@@ -34,7 +34,7 @@ func main() {
 	// Setup CORS
 	app.Use(cors.New(cors.Config{
 		AllowOrigins:     allowedOrigins,
-		AllowHeaders:     "Origin, Content-Type, Accept",
+		AllowHeaders:     "Origin, Content-Type, Accept, X-Player-ID",
 		AllowMethods:     "GET, POST, OPTIONS",
 		AllowCredentials: true,
 		ExposeHeaders:    "Upgrade",
