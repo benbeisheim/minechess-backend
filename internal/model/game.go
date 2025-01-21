@@ -477,47 +477,86 @@ func (g *Game) getLegalMovesForPiece(piece *Piece) []SimpleMove {
 	}
 }
 
-func (g *Game) filterLegalMoves(psuedoMoves []SimpleMove) []SimpleMove {
-	// TODO: Implement move filtering
-	fmt.Println("Filtering legal moves for piece", g.state.Board.Board[psuedoMoves[0].From.Y][psuedoMoves[0].From.X])
-	legalMoves := []SimpleMove{}
-	for _, move := range psuedoMoves {
-		fmt.Println("Checking move", move)
-		// record current state
-		fromState := *g.state.Board.Board[move.From.Y][move.From.X]
-		toState := *g.state.Board.Board[move.To.Y][move.To.X]
-		// if king move, set king position
-		if fromState.Type == King {
-			switch g.state.ToMove {
-			case "white":
-				g.state.Board.WhiteKingPosition = move.To
-			case "black":
-				g.state.Board.BlackKingPosition = move.To
-			}
-		}
-		fmt.Println("Executing temp move")
-		// execute temp move
-		g.state.Board.Board[move.To.Y][move.To.X] = &fromState
-		g.state.Board.Board[move.From.Y][move.From.X] = nil
-		// check if king is in check
-		if !isKingInCheck(g.state.Board, g.state.ToMove) {
-			legalMoves = append(legalMoves, move)
-		}
-		// revert temp move
-		g.state.Board.Board[move.From.Y][move.From.X] = &fromState
-		g.state.Board.Board[move.To.Y][move.To.X] = &toState
-		// if king move, revert king position
-		if fromState.Type == King {
-			switch g.state.ToMove {
-			case "white":
-				g.state.Board.WhiteKingPosition = fromState.Position
-			case "black":
-				g.state.Board.BlackKingPosition = fromState.Position
-			}
-		}
-		fmt.Println("Reverted temp move")
+// TempMove represents a move that can be undone
+type TempMove struct {
+	from          Position
+	to            Position
+	movedPiece    *Piece
+	capturedPiece *Piece
+	oldKingPos    Position
+}
+
+func (g *Game) filterLegalMoves(pseudoMoves []SimpleMove) []SimpleMove {
+	if len(pseudoMoves) == 0 {
+		return nil
 	}
+
+	legalMoves := make([]SimpleMove, 0, len(pseudoMoves))
+
+	for _, move := range pseudoMoves {
+		if temp, ok := g.tryMove(move); ok {
+			// Check if this move leaves or puts the king in check
+			if !isKingInCheck(g.state.Board, g.state.ToMove) {
+				legalMoves = append(legalMoves, move)
+			}
+			g.undoMove(temp)
+		}
+	}
+
 	return legalMoves
+}
+
+// tryMove attempts to make a move and returns data needed to undo it
+func (g *Game) tryMove(move SimpleMove) (TempMove, bool) {
+	temp := TempMove{
+		from:          move.From,
+		to:            move.To,
+		movedPiece:    g.state.Board.Board[move.From.Y][move.From.X],
+		capturedPiece: g.state.Board.Board[move.To.Y][move.To.X],
+	}
+
+	if temp.movedPiece == nil {
+		return TempMove{}, false
+	}
+
+	// Create deep copy of the piece to avoid reference issues
+	movedPieceCopy := *temp.movedPiece
+	movedPieceCopy.Position = move.To
+
+	// Update board state
+	g.state.Board.Board[move.To.Y][move.To.X] = &movedPieceCopy
+	g.state.Board.Board[move.From.Y][move.From.X] = nil
+
+	// Handle king position updates
+	if temp.movedPiece.Type == King {
+		switch g.state.ToMove {
+		case "white":
+			temp.oldKingPos = g.state.Board.WhiteKingPosition
+			g.state.Board.WhiteKingPosition = move.To
+		case "black":
+			temp.oldKingPos = g.state.Board.BlackKingPosition
+			g.state.Board.BlackKingPosition = move.To
+		}
+	}
+
+	return temp, true
+}
+
+// undoMove reverts a move using the saved temporary state
+func (g *Game) undoMove(temp TempMove) {
+	// Restore original board state
+	g.state.Board.Board[temp.from.Y][temp.from.X] = temp.movedPiece
+	g.state.Board.Board[temp.to.Y][temp.to.X] = temp.capturedPiece
+
+	// Restore king position if necessary
+	if temp.movedPiece.Type == King {
+		switch g.state.ToMove {
+		case "white":
+			g.state.Board.WhiteKingPosition = temp.oldKingPos
+		case "black":
+			g.state.Board.BlackKingPosition = temp.oldKingPos
+		}
+	}
 }
 
 func (g *Game) getPsuedoPawnMoves(piece *Piece) []SimpleMove {
