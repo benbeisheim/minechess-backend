@@ -26,7 +26,6 @@ func main() {
 
 	// Get CORS origins
 	allowedOrigins := os.Getenv("CORS_ORIGIN")
-	fmt.Println("Allowed origins:", allowedOrigins)
 	if allowedOrigins == "" {
 		allowedOrigins = "http://localhost:5173, https://bombchess.vercel.app, https://bombchess.vercel.app/, https://minechess-frontend-jmx16a8bg-benbeisheims-projects.vercel.app, https://minechess-frontend-3i7ths496-benbeisheims-projects.vercel.app"
 	}
@@ -68,7 +67,7 @@ func main() {
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
 		// Enable all origins during development
-		Origins: []string{"http://localhost:5173", "https://minechess-frontend.vercel.app", "https://minechess-frontend-3i7ths496-benbeisheims-projects.vercel.app"},
+		Origins: []string{"http://localhost:5173", "https://bombchess.vercel.app", "https://bombchess.vercel.app/", "https://minechess-frontend-3i7ths496-benbeisheims-projects.vercel.app"},
 	}))
 
 	// Set up REST routes
