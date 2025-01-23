@@ -40,9 +40,7 @@ func (gs *GameService) GetGameState(gameID string) (model.GameState, error) {
 	return gs.gameManager.GetGameState(gameID)
 }
 
-// HandleMove processes a move from a player and broadcasts the update
 func (gs *GameService) HandleMove(gameID string, playerID string, move model.WSMove) error {
-	// Validate and execute the move using game manager
 	if err := gs.gameManager.MakeMove(gameID, playerID, move); err != nil {
 		return err
 	}
@@ -58,4 +56,12 @@ func (gs *GameService) RegisterConnection(gameID string, playerID string, conn *
 func (gs *GameService) UnregisterConnection(gameID string, playerID string) {
 	fmt.Println("Unregistering connection in game service")
 	gs.gameManager.UnregisterConnection(gameID, playerID)
+}
+
+func (gs *GameService) RegisterMatchmakingChannel(playerID string, ch chan string) error {
+	return gs.gameManager.RegisterMatchmakingChannel(playerID, ch)
+}
+
+func (gs *GameService) UnregisterMatchmakingChannel(playerID string) {
+	gs.gameManager.UnregisterMatchmakingChannel(playerID)
 }

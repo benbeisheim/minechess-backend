@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"bufio"
 	"fmt"
 
 	"github.com/benbeisheim/minechess-backend/internal/service"
@@ -78,4 +79,64 @@ func (gc *GameController) JoinMatchmaking(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"status": "queued",
 	})
+}
+
+func (gc *GameController) HandleMatchmakingEvents(c *fiber.Ctx) error {
+	// Set required headers for SSE
+	c.Set("Content-Type", "text/event-stream")
+	c.Set("Cache-Control", "no-cache")
+	c.Set("Connection", "keep-alive")
+	c.Set("Transfer-Encoding", "chunked")
+
+	// Get player ID from context
+	playerID := c.Locals("playerID").(string)
+
+	// Create channel for this client
+	matchChan := make(chan string)
+	// Create a done channel to signal connection closure
+	done := make(chan struct{})
+
+	// Register the channel with the game service
+	if err := gc.gameService.RegisterMatchmakingChannel(playerID, matchChan); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to register for matchmaking events",
+		})
+	}
+
+	// Use Fiber's streaming capability
+	c.Context().SetBodyStreamWriter(func(w *bufio.Writer) {
+		defer func() {
+			gc.gameService.UnregisterMatchmakingChannel(playerID)
+			close(done)
+		}()
+
+		// Instead of trying to use context values, we'll use our done channel
+		for {
+			select {
+			case gameID, ok := <-matchChan:
+				if !ok {
+					// Channel was closed by the service
+					return
+				}
+
+				// Send the game ID as an SSE event
+				_, err := fmt.Fprintf(w, "data: %s\n\n", gameID)
+				if err != nil {
+					return
+				}
+
+				// Ensure the data is sent immediately
+				err = w.Flush()
+				if err != nil {
+					return
+				}
+
+			case <-done:
+				// Connection was closed
+				return
+			}
+		}
+	})
+
+	return nil
 }

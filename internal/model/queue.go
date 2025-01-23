@@ -6,12 +6,14 @@ import (
 	"time"
 )
 
+type MatchFoundEvent struct {
+	GameID string      `json:"gameId"`
+	Color  PlayerColor `json:"color"`
+}
+
 type QueuedPlayer struct {
 	Player   Player
 	JoinedAt time.Time
-	// We might want to add fields like:
-	// PreferredTimeControl string
-	// Rating int
 }
 
 type Queue struct {

@@ -134,6 +134,7 @@ func (g *Game) AddPlayer(playerID string) (string, error) {
 		}
 		return "black", nil
 	}
+	fmt.Println("Game is full")
 	return "", errors.New("game is full")
 }
 
@@ -195,8 +196,6 @@ func (g *Game) MakeMove(move WSMove) error {
 	if err := g.validateMove(move); err != nil {
 		return err
 	}
-	// Set opposing players clock
-	// Stop current player's clock
 	if g.state.ToMove == "white" {
 		g.whiteClock.Stop()
 	} else {
@@ -250,7 +249,7 @@ func (g *Game) MakeMove(move WSMove) error {
 */
 func (g *Game) validateMove(move WSMove) error {
 	fmt.Println("Validating move in model/game", move)
-	// TODO: Implement move validation
+	// check if move is out of bounds
 	if move.From.X < 0 || move.From.X > 7 || move.From.Y < 0 || move.From.Y > 7 || move.To.X < 0 || move.To.X > 7 || move.To.Y < 0 || move.To.Y > 7 {
 		return errors.New("invalid move, out of bounds")
 	}
@@ -282,13 +281,13 @@ func (g *Game) executeMove(move WSMove) error {
 	} else {
 		g.state.Sound = "move"
 	}
-	// move the piece
+	// Move the piece
 	piece := g.state.Board.Board[move.From.Y][move.From.X]
 	g.state.Board.Board[move.From.Y][move.From.X] = nil
 	g.state.Board.Board[move.To.Y][move.To.X] = piece
-	// set hasMoved to true
+	// Set hasMoved to true
 	g.state.Board.Board[move.To.Y][move.To.X].HasMoved = true
-	// if promotion, change piece type
+	// If promotion, change piece type
 	if move.Promotion != "" {
 		g.state.Board.Board[move.To.Y][move.To.X].Type = move.Promotion
 	}
@@ -302,7 +301,7 @@ func (g *Game) executeMove(move WSMove) error {
 			g.state.Board.BlackKingPosition = move.To
 		}
 	}
-	// if en passant, handle en passant
+	// If en passant, handle en passant
 	if piece.Type == Pawn {
 		ply = g.handleEnPassant(move, ply)
 	}
@@ -319,10 +318,10 @@ func (g *Game) executeMove(move WSMove) error {
 		g.state.MoveHistory[lastIdx].BlackPly = ply
 	}
 
-	// update moved pieces position
+	// Update moved pieces position
 	g.state.Board.Board[move.To.Y][move.To.X].Position = move.To
 
-	// if piece landed on mine, remove piece and check for bombmate
+	// If piece landed on mine, remove piece and check for bombmate
 	if g.mine != nil && move.To.X == g.mine.X && move.To.Y == g.mine.Y {
 		switch g.state.ToMove {
 		case "white":
@@ -337,14 +336,14 @@ func (g *Game) executeMove(move WSMove) error {
 		}
 	}
 
-	// set mine
+	// Set mine
 	g.mine = &move.Mine
 
-	// switch turn
+	// Switch turn
 	g.switchTurn()
-	// check if opponent king is in check after move
+	// Check if opponent king is in check after move
 	g.state.IsCheck = isKingInCheck(g.state.Board, g.state.ToMove)
-	// check if game is over
+	// Check if game is over
 	if g.isNoLegalMoves(g.state.ToMove) {
 		switch g.state.IsCheck {
 		case true:
@@ -355,11 +354,11 @@ func (g *Game) executeMove(move WSMove) error {
 			g.state.Resolve = &result
 		}
 	}
-	// if king in check, set check sound
+	// If king in check, set check sound
 	if g.state.IsCheck {
 		g.state.Sound = "check"
 	}
-	// set lastMove
+	// Set lastMove
 	g.state.LastMove = &SimpleMove{From: move.From, To: move.To}
 
 	go g.broadcastState()
@@ -375,7 +374,6 @@ func getOtherColor(color string) string {
 }
 
 func isKingInCheck(boardState *BoardState, color string) bool {
-	// TODO: Implement king in check detection
 	if color == "white" {
 		return isSquareAttacked(boardState, "black", boardState.WhiteKingPosition)
 	}
@@ -383,7 +381,6 @@ func isKingInCheck(boardState *BoardState, color string) bool {
 }
 
 func isSquareAttacked(boardState *BoardState, attackingColor string, position Position) bool {
-	// TODO: Implement square attacked detection
 	rookDirs := []Position{{X: 1, Y: 0}, {X: -1, Y: 0}, {X: 0, Y: 1}, {X: 0, Y: -1}}
 	bishopDirs := []Position{{X: 1, Y: 1}, {X: 1, Y: -1}, {X: -1, Y: 1}, {X: -1, Y: -1}}
 	knightDirs := []Position{{X: 2, Y: 1}, {X: 2, Y: -1}, {X: -2, Y: 1}, {X: -2, Y: -1}, {X: 1, Y: 2}, {X: 1, Y: -2}, {X: -1, Y: 2}, {X: -1, Y: -2}}
@@ -441,12 +438,10 @@ func boundaryCheck(position Position) bool {
 }
 
 func (g *Game) isNoLegalMoves(color string) bool {
-	// TODO: Implement no legal moves detection
 	return len(g.getLegalMovesForColor(color)) == 0
 }
 
 func (g *Game) getLegalMovesForColor(color string) []SimpleMove {
-	// TODO: Implement get legal moves for color
 	legalMoves := []SimpleMove{}
 	for y := 0; y < 8; y++ {
 		for x := 0; x < 8; x++ {
@@ -459,7 +454,6 @@ func (g *Game) getLegalMovesForColor(color string) []SimpleMove {
 }
 
 func (g *Game) getLegalMovesForPiece(piece *Piece) []SimpleMove {
-	// TODO: Implement get legal moves for piece
 	switch piece.Type {
 	case Pawn:
 		psuedoMoves := g.getPsuedoPawnMoves(piece)
@@ -655,12 +649,10 @@ func (g *Game) getPsuedoRookMoves(piece *Piece) []SimpleMove {
 }
 
 func (g *Game) getPsuedoQueenMoves(piece *Piece) []SimpleMove {
-	// TODO: Implement psuedo queen moves
 	return append(g.getPsuedoBishopMoves(piece), g.getPsuedoRookMoves(piece)...)
 }
 
 func (g *Game) getPsuedoKingMoves(piece *Piece) []SimpleMove {
-	// TODO: Implement psuedo king moves
 	kingMoves := []SimpleMove{}
 	kingDirs := []Position{{X: 1, Y: 0}, {X: -1, Y: 0}, {X: 0, Y: 1}, {X: 0, Y: -1}, {X: 1, Y: 1}, {X: 1, Y: -1}, {X: -1, Y: 1}, {X: -1, Y: -1}}
 	for _, dir := range kingDirs {
@@ -719,8 +711,6 @@ func abs(x int) int {
 }
 
 func (g *Game) handleCastle(move WSMove, ply Ply) Ply {
-	fmt.Println("Handling castle for move", move)
-	// TODO: Implement castle handling
 	// assume only called for king move
 	if abs(move.From.X-move.To.X) == 2 {
 		switch move.To.X {
@@ -751,6 +741,7 @@ func (g *Game) handleCastle(move WSMove, ply Ply) Ply {
 
 func (g *Game) makePly(move WSMove) Ply {
 	// return ply without rook castle move, add castle rook move in castle detection
+	// at some point, will need to add en passant capture in order to allow for game reconstruction
 	return Ply{
 		Piece:          g.state.Board.Board[move.From.Y][move.From.X],
 		From:           move.From,
@@ -763,7 +754,6 @@ func (g *Game) makePly(move WSMove) Ply {
 }
 
 func (g *Game) getNotation(move WSMove) string {
-	// TODO: Implement notation
 	piece := g.state.Board.Board[move.From.Y][move.From.X]
 	from := move.From
 	to := move.To
@@ -805,7 +795,7 @@ func (g *Game) RegisterConnection(playerID string, conn *websocket.Conn) error {
 
 	g.connections.mu.Lock()
 	if _, exists := g.connections.connections[playerID]; exists {
-		// If we already have a healthy connection, keep it and reject the new one
+		// If already connected, reject new connection
 		g.connections.mu.Unlock()
 		conn.WriteMessage(
 			websocket.CloseMessage,
@@ -815,7 +805,7 @@ func (g *Game) RegisterConnection(playerID string, conn *websocket.Conn) error {
 			),
 		)
 		conn.Close()
-		return nil // Not really an error, just rejecting duplicate connection
+		return nil
 	}
 
 	// Register new connection
@@ -828,7 +818,6 @@ func (g *Game) RegisterConnection(playerID string, conn *websocket.Conn) error {
 	return nil
 }
 
-// Modify UnregisterConnection to be more selective
 func (g *Game) UnregisterConnection(playerID string) {
 	g.connections.mu.Lock()
 	defer g.connections.mu.Unlock()
@@ -845,7 +834,6 @@ func (g *Game) UnregisterConnection(playerID string) {
 	}
 }
 
-// Modify BroadcastState to safely handle concurrent access
 func (g *Game) broadcastState() error {
 	// Get a snapshot of connections under the connections mutex
 	g.connections.mu.RLock()
@@ -856,7 +844,7 @@ func (g *Game) broadcastState() error {
 		activeConnections[playerID] = conn
 	}
 
-	// Now broadcast to each connection without holding any locks
+	// Broadcast to each connection without holding any locks
 	for playerID, conn := range activeConnections {
 		fmt.Println("Broadcasting state to player", playerID, g.state)
 		jsonGameState, err := json.Marshal(g.state)
@@ -870,7 +858,6 @@ func (g *Game) broadcastState() error {
 			Payload: json.RawMessage(jsonGameState),
 		}); err != nil {
 			fmt.Println("Failed to send state to player", playerID, err)
-			// Consider removing failed connections
 			g.connections.mu.Lock()
 			delete(g.connections.connections, playerID)
 			g.connections.mu.Unlock()

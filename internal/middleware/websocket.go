@@ -12,7 +12,6 @@ import (
 func WebSocketUpgrade() fiber.Handler {
 	fmt.Println("WebSocketUpgrade middleware")
 	return func(c *fiber.Ctx) error {
-		// First, check if this is a WebSocket upgrade request
 		if !websocket.IsWebSocketUpgrade(c) {
 			return fiber.ErrUpgradeRequired
 		}
@@ -25,7 +24,7 @@ func WebSocketUpgrade() fiber.Handler {
 			})
 		}
 
-		// Ensure we have a player ID (this would have been set by our EnsurePlayerID middleware)
+		// Ensure we have a player ID
 		playerID := c.Locals("playerID")
 		if playerID == nil {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
@@ -38,7 +37,6 @@ func WebSocketUpgrade() fiber.Handler {
 		c.Locals("wsGameID", gameID)
 		c.Locals("wsPlayerID", playerID)
 
-		// Allow the upgrade to proceed
 		return c.Next()
 	}
 }

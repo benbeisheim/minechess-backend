@@ -63,10 +63,9 @@ func main() {
 		fmt.Printf("WebSocket connection established for game: %s\n", c.Params("gameId"))
 		wsController.HandleConnection(c)
 	}, websocket.Config{
-		// Add some WebSocket-specific configuration
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
-		// Enable all origins during development
+		// Enable all origins
 		Origins: []string{"http://localhost:5173", "https://bombchess.vercel.app", "https://bombchess.vercel.app/", "https://minechess-frontend-3i7ths496-benbeisheims-projects.vercel.app"},
 	}))
 
@@ -79,6 +78,7 @@ func main() {
 	gameRoutes.Post("/create", gameController.CreateGame)
 	gameRoutes.Post("/join/:gameId", gameController.JoinGame)
 	gameRoutes.Get("/:gameId", gameController.GetGameState)
+	gameRoutes.Get("/matchmaking/events", gameController.HandleMatchmakingEvents)
 
 	log.Fatal(app.Listen(":3000"))
 }

@@ -26,7 +26,7 @@ func (wsc *WebSocketController) HandleConnection(c *websocket.Conn) {
 	fmt.Println("Handling connection")
 	// Extract game ID and player ID from context
 	gameID := c.Params("gameId")
-	playerID := c.Query("playerId")
+	playerID := c.Locals("playerID").(string)
 
 	if playerID == "" {
 		wsc.sendError(c, "playerId is required")
@@ -49,7 +49,6 @@ func (wsc *WebSocketController) HandleConnection(c *websocket.Conn) {
 			break
 		}
 
-		// Handle different types of WebSocket messages
 		if messageType == websocket.TextMessage {
 			var msg ws.Message
 			if err := json.Unmarshal(message, &msg); err != nil {
@@ -64,11 +63,9 @@ func (wsc *WebSocketController) HandleConnection(c *websocket.Conn) {
 		}
 	}
 
-	// Clean up when connection closes
 	wsc.gameService.UnregisterConnection(gameID, playerID)
 }
 
-// Handle different types of incoming messages
 func (wsc *WebSocketController) handleMessage(gameID, playerID string, msg ws.Message) error {
 	fmt.Println("Handling message:", msg.Type)
 	switch msg.Type {
@@ -79,14 +76,11 @@ func (wsc *WebSocketController) handleMessage(gameID, playerID string, msg ws.Me
 		}
 		return wsc.gameService.HandleMove(gameID, playerID, move)
 
-	// Add more message type handlers as needed
-
 	default:
 		return fmt.Errorf("unknown message type: %s", msg.Type)
 	}
 }
 
-// Helper method to send error messages
 func (wsc *WebSocketController) sendError(c *websocket.Conn, errorMsg string) {
 	c.WriteJSON(ws.Message{
 		Type:    ws.MessageTypeError,
