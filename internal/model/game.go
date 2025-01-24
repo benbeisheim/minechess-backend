@@ -122,7 +122,7 @@ func (g *Game) AddPlayer(playerID string) (string, error) {
 		g.state.Players.White = ClientPlayer{
 			ID:       playerID,
 			Color:    "white",
-			TimeLeft: 6000,
+			TimeLeft: 12000,
 		}
 		return "white", nil
 	}
@@ -130,7 +130,7 @@ func (g *Game) AddPlayer(playerID string) (string, error) {
 		g.state.Players.Black = ClientPlayer{
 			ID:       playerID,
 			Color:    "black",
-			TimeLeft: 6000,
+			TimeLeft: 12000,
 		}
 		return "black", nil
 	}

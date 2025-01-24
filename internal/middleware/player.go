@@ -1,6 +1,8 @@
 package middleware
 
 import (
+	"fmt"
+
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -8,16 +10,17 @@ func EnsurePlayerID() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		// Check if playerID is already set
 		if c.Locals("playerID") != nil {
+			fmt.Println("Player ID already set:", c.Locals("playerID"))
 			return c.Next()
 		}
 
 		var playerID string
 		// Check header first
 		playerID = c.Get("X-Player-ID")
-
+		fmt.Println("Player ID from header:", playerID)
 		if playerID == "" {
-			// Generate new ID if none exists
 			playerID = c.Query("playerId")
+			fmt.Println("Player ID from query:", playerID)
 		}
 
 		if playerID == "" {
