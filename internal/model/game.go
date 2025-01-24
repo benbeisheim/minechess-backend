@@ -497,6 +497,7 @@ func (g *Game) filterLegalMoves(pseudoMoves []SimpleMove) []SimpleMove {
 	for _, move := range pseudoMoves {
 		if temp, ok := g.tryMove(move); ok {
 			// Check if this move leaves or puts the king in check
+			fmt.Println("Checking if king is in check after move", move)
 			if !isKingInCheck(g.state.Board, g.state.ToMove) {
 				legalMoves = append(legalMoves, move)
 			}
