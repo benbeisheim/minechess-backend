@@ -727,6 +727,7 @@ func (g *Game) handleCastle(move WSMove, ply Ply) Ply {
 		switch move.To.X {
 		case 2:
 			rook := g.state.Board.Board[move.From.Y][0]
+			rook.Position = Position{X: 3, Y: move.From.Y}
 			g.state.Board.Board[move.From.Y][0] = nil
 			g.state.Board.Board[move.From.Y][3] = rook
 			rook.HasMoved = true
@@ -737,6 +738,7 @@ func (g *Game) handleCastle(move WSMove, ply Ply) Ply {
 			ply.Notation = "O-O-O"
 		case 6:
 			rook := g.state.Board.Board[move.From.Y][7]
+			rook.Position = Position{X: 5, Y: move.From.Y}
 			g.state.Board.Board[move.From.Y][7] = nil
 			g.state.Board.Board[move.From.Y][5] = rook
 			rook.HasMoved = true
