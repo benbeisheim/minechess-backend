@@ -61,8 +61,8 @@ func NewGame(id string) *Game {
 		mu:          sync.Mutex{},
 		state:       newGameState(),
 		connections: NewGameConnections(),
-		whiteClock:  NewClock(time.Duration(600) * time.Second),
-		blackClock:  NewClock(time.Duration(600) * time.Second),
+		whiteClock:  NewClock(time.Duration(1800) * time.Second),
+		blackClock:  NewClock(time.Duration(1800) * time.Second),
 	}
 }
 
