@@ -91,12 +91,12 @@ func newGameState() GameState {
 			White: ClientPlayer{
 				ID:       "",
 				Color:    "",
-				TimeLeft: 6000,
+				TimeLeft: 12000,
 			},
 			Black: ClientPlayer{
 				ID:       "",
 				Color:    "",
-				TimeLeft: 6000,
+				TimeLeft: 12000,
 			},
 		},
 		PromotionSquare: nil,
