@@ -469,12 +469,14 @@ func (g *Game) getLegalMovesForPiece(piece *Piece) []SimpleMove {
 		return g.filterLegalMoves(psuedoMoves)
 	case Rook:
 		psuedoMoves := g.getPsuedoRookMoves(piece)
+		fmt.Println("Psuedo rook moves", psuedoMoves)
 		return g.filterLegalMoves(psuedoMoves)
 	case Queen:
 		psuedoMoves := g.getPsuedoQueenMoves(piece)
 		return g.filterLegalMoves(psuedoMoves)
 	case King:
 		psuedoMoves := g.getPsuedoKingMoves(piece)
+		fmt.Println("Psuedo king moves", psuedoMoves)
 		return g.filterLegalMoves(psuedoMoves)
 	default:
 		return []SimpleMove{}
@@ -491,6 +493,7 @@ type TempMove struct {
 }
 
 func (g *Game) filterLegalMoves(pseudoMoves []SimpleMove) []SimpleMove {
+	fmt.Println("Filtering legal moves: pseudoMoves", pseudoMoves)
 	if len(pseudoMoves) == 0 {
 		return nil
 	}
@@ -558,8 +561,10 @@ func (g *Game) undoMove(temp TempMove) {
 		switch g.state.ToMove {
 		case "white":
 			g.state.Board.WhiteKingPosition = temp.oldKingPos
+			fmt.Println("Restored white king position", g.state.Board.WhiteKingPosition)
 		case "black":
 			g.state.Board.BlackKingPosition = temp.oldKingPos
+			fmt.Println("Restored black king position", g.state.Board.BlackKingPosition)
 		}
 	}
 }
@@ -635,6 +640,7 @@ func (g *Game) getPsuedoRookMoves(piece *Piece) []SimpleMove {
 	// TODO: Implement psuedo rook moves
 	rookMoves := []SimpleMove{}
 	rookDirs := []Position{{X: 1, Y: 0}, {X: -1, Y: 0}, {X: 0, Y: 1}, {X: 0, Y: -1}}
+	fmt.Println("Getting psuedo rook moves for piece in getPsuedoRookMoves", piece)
 	for _, dir := range rookDirs {
 		targetPos := Position{X: piece.Position.X + dir.X, Y: piece.Position.Y + dir.Y}
 		for boundaryCheck(targetPos) {
@@ -649,6 +655,7 @@ func (g *Game) getPsuedoRookMoves(piece *Piece) []SimpleMove {
 			targetPos = Position{X: targetPos.X + dir.X, Y: targetPos.Y + dir.Y}
 		}
 	}
+	fmt.Println("Rook moves", rookMoves)
 	return rookMoves
 }
 
