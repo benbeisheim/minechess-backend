@@ -194,6 +194,7 @@ func (g *Game) MakeMove(move WSMove) error {
 
 	// Validate and execute the move
 	if err := g.validateMove(move); err != nil {
+		go g.broadcastState()
 		return err
 	}
 	if g.state.ToMove == "white" {
@@ -256,7 +257,9 @@ func (g *Game) validateMove(move WSMove) error {
 	// check if move is legal
 	moveToCheck := SimpleMove{From: move.From, To: move.To}
 	isLegal := false
+	fmt.Println("Legal moves for piece", g.getLegalMovesForPiece(g.state.Board.Board[move.From.Y][move.From.X]))
 	for _, legalMove := range g.getLegalMovesForPiece(g.state.Board.Board[move.From.Y][move.From.X]) {
+		fmt.Println("Checking legal move", legalMove)
 		if legalMove.From == moveToCheck.From && legalMove.To == moveToCheck.To {
 			isLegal = true
 			break
