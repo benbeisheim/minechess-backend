@@ -326,8 +326,8 @@ func (g *Game) executeMove(move WSMove) error {
 	// Update moved pieces position
 	g.state.Board.Board[move.To.Y][move.To.X].Position = move.To
 
-	// If non-king piece landed on mine, remove piece and check for bombmate
-	if g.mine != nil && move.To.X == g.mine.X && move.To.Y == g.mine.Y && piece.Type != King {
+	// If non-king non pawn piece landed on mine, remove piece and check for bombmate
+	if g.mine != nil && move.To.X == g.mine.X && move.To.Y == g.mine.Y && piece.Type != King && piece.Type != Pawn {
 		g.state.Explosion = &move.To
 		switch g.state.ToMove {
 		case "white":
