@@ -48,6 +48,7 @@ type GameState struct {
 	Mine                   *Position   `json:"mine"`                   // Made nullable
 	PendingMoveDestination *Position   `json:"pendingMoveDestination"` // Made nullable
 	LastMove               *SimpleMove `json:"lastMove"`               // Made nullable
+	Explosion              *Position   `json:"explosion"`              // Made nullable
 }
 
 type CapturedPieces struct {
@@ -103,6 +104,7 @@ func newGameState() GameState {
 		PromotionPiece:  nil,
 		Mine:            nil,
 		LastMove:        nil,
+		Explosion:       nil,
 	}
 }
 
@@ -324,8 +326,9 @@ func (g *Game) executeMove(move WSMove) error {
 	// Update moved pieces position
 	g.state.Board.Board[move.To.Y][move.To.X].Position = move.To
 
-	// If piece landed on mine, remove piece and check for bombmate
-	if g.mine != nil && move.To.X == g.mine.X && move.To.Y == g.mine.Y {
+	// If non-king piece landed on mine, remove piece and check for bombmate
+	if g.mine != nil && move.To.X == g.mine.X && move.To.Y == g.mine.Y && piece.Type != King {
+		g.state.Explosion = &move.To
 		switch g.state.ToMove {
 		case "white":
 			g.state.CapturedPieces.White = append(g.state.CapturedPieces.White, *g.state.Board.Board[move.To.Y][move.To.X])
@@ -337,6 +340,8 @@ func (g *Game) executeMove(move WSMove) error {
 			result := getOtherColor(g.state.ToMove) + " wins by Bombmate"
 			g.state.Resolve = &result
 		}
+	} else {
+		g.state.Explosion = nil
 	}
 
 	// Set mine
