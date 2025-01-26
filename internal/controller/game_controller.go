@@ -80,60 +80,42 @@ func (gc *GameController) JoinMatchmaking(c *fiber.Ctx) error {
 		"status": "queued",
 	})
 }
-
 func (gc *GameController) HandleMatchmakingEvents(c *fiber.Ctx) error {
-	// Set required headers for SSE
+	// ... existing header setup code ...
 	c.Set("Content-Type", "text/event-stream")
 	c.Set("Cache-Control", "no-cache")
 	c.Set("Connection", "keep-alive")
 	c.Set("Transfer-Encoding", "chunked")
 
-	// Get player ID from context
-	playerID := c.Locals("playerID").(string)
-
-	// Create channel for this client
+	playerID := c.Query("playerId")
 	matchChan := make(chan string)
-	// Create a done channel to signal connection closure
-	done := make(chan struct{})
 
-	// Register the channel with the game service
 	if err := gc.gameService.RegisterMatchmakingChannel(playerID, matchChan); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to register for matchmaking events",
 		})
 	}
 
-	// Use Fiber's streaming capability
+	// Set up cleanup for when the client disconnects
 	c.Context().SetBodyStreamWriter(func(w *bufio.Writer) {
 		defer func() {
+			// The channel will already be closed if a match was found
+			// Otherwise, we need to clean up here
 			gc.gameService.UnregisterMatchmakingChannel(playerID)
-			close(done)
 		}()
 
-		// Instead of trying to use context values, we'll use our done channel
 		for {
 			select {
-			case gameID, ok := <-matchChan:
+			case msg, ok := <-matchChan:
 				if !ok {
-					// Channel was closed by the service
+					// Channel was closed, exit the stream
 					return
 				}
-
-				// Send the game ID as an SSE event
-				_, err := fmt.Fprintf(w, "data: %s\n\n", gameID)
+				fmt.Fprintf(w, "data: %s\n\n", msg)
+				err := w.Flush()
 				if err != nil {
 					return
 				}
-
-				// Ensure the data is sent immediately
-				err = w.Flush()
-				if err != nil {
-					return
-				}
-
-			case <-done:
-				// Connection was closed
-				return
 			}
 		}
 	})

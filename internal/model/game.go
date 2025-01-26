@@ -63,8 +63,8 @@ func NewGame(id string) *Game {
 		mu:          sync.Mutex{},
 		state:       newGameState(),
 		connections: NewGameConnections(),
-		whiteClock:  NewClock(time.Duration(1800) * time.Second),
-		blackClock:  NewClock(time.Duration(1800) * time.Second),
+		whiteClock:  NewClock(time.Duration(1200) * time.Second),
+		blackClock:  NewClock(time.Duration(1200) * time.Second),
 	}
 }
 
@@ -117,7 +117,7 @@ func newCapturedPieces() CapturedPieces {
 	}
 }
 
-func (g *Game) AddPlayer(playerID string) (string, error) {
+func (g *Game) AddPlayer(playerID string) (PlayerColor, error) {
 	fmt.Println("Adding player to game in model/game", playerID, g.state.Players)
 	g.mu.Lock()
 	defer g.mu.Unlock()
@@ -128,7 +128,7 @@ func (g *Game) AddPlayer(playerID string) (string, error) {
 			Color:    "white",
 			TimeLeft: 12000,
 		}
-		return "white", nil
+		return PlayerColorWhite, nil
 	}
 	if g.state.Players.Black.ID == "" {
 		g.state.Players.Black = ClientPlayer{
@@ -136,7 +136,7 @@ func (g *Game) AddPlayer(playerID string) (string, error) {
 			Color:    "black",
 			TimeLeft: 12000,
 		}
-		return "black", nil
+		return PlayerColorBlack, nil
 	}
 	fmt.Println("Game is full")
 	return "", errors.New("game is full")

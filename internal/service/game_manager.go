@@ -25,27 +25,21 @@ func (gm *GameManager) RegisterMatchmakingChannel(playerID string, ch chan strin
 	defer gm.mu.Unlock()
 	fmt.Println("Registering matchmaking channel for player", playerID)
 
-	// If there's an existing channel, close it first
+	// If there's an existing channel, we need to handle it properly
 	if existingCh, exists := gm.matchingChannels[playerID]; exists {
+		fmt.Println("Found existing channel for player", playerID)
+		// Remove from map first to prevent any new writes
+		delete(gm.matchingChannels, playerID)
+		// Then close the channel
 		close(existingCh)
 	}
 
+	// Register the new channel
 	gm.matchingChannels[playerID] = ch
 	return nil
 }
 
-func (gm *GameManager) UnregisterMatchmakingChannel(playerID string) {
-	gm.mu.Lock()
-	defer gm.mu.Unlock()
-	fmt.Println("Unregistering matchmaking channel for player", playerID)
-
-	if _, exists := gm.matchingChannels[playerID]; exists {
-		// We don't close the channel here because it might be used by other goroutines
-		// The creator of the channel (HandleMatchmakingEvents) is responsible for closing it
-		delete(gm.matchingChannels, playerID)
-	}
-}
-
+// Now let's modify processMatchmaking to handle channel cleanup after sending events
 func (gm *GameManager) processMatchmaking() {
 	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
@@ -55,49 +49,82 @@ func (gm *GameManager) processMatchmaking() {
 		if gm.queue.Size() >= 2 {
 			player1, player2 := gm.queue.GetNextPair()
 
+			// Create and set up the game as before...
 			// Create new game
 			gameID := uuid.New().String()
 			game := model.NewGame(gameID)
 
 			// Add players to game
-			game.AddPlayer(player1.ID) // Assuming this returns the assigned color
-			game.AddPlayer(player2.ID)
+			p1Color, err := game.AddPlayer(player1.ID) // Assuming this returns the assigned color
+			if err != nil {
+				fmt.Println("Error adding player to game", err)
+				continue
+			}
+			p2Color, err := game.AddPlayer(player2.ID)
+			if err != nil {
+				fmt.Println("Error adding player to game", err)
+				continue
+			}
 			gm.games[gameID] = game
 
 			// Create match events for each player
 			player1Event := model.MatchFoundEvent{
 				GameID: gameID,
-				Color:  "white", // Use actual color assigned by AddPlayer
+				Color:  p1Color, // Use actual color assigned by AddPlayer
 			}
 			player2Event := model.MatchFoundEvent{
 				GameID: gameID,
-				Color:  "black", // Use actual color assigned by AddPlayer
+				Color:  p2Color, // Use actual color assigned by AddPlayer
 			}
 
-			// Send events to players
-			fmt.Println("Sending match found event to player", player1.ID)
-			if ch1, ok := gm.matchingChannels[player1.ID]; ok {
-				select {
-				case ch1 <- mustJSON(player1Event): // Helper function to handle JSON marshaling
-					fmt.Println("Sent match found event to player", player1.ID)
-				default:
-					// Channel is blocked or closed, skip this notification
-					fmt.Println("Channel is blocked or closed, skipping match found event to player", player1.ID)
+			// Send events and clean up channels
+			successfullySentBoth := true
+
+			// Helper function to send event and clean up channel
+			sendEventAndCleanup := func(playerID string, event model.MatchFoundEvent) bool {
+				if ch, ok := gm.matchingChannels[playerID]; ok {
+					select {
+					case ch <- mustJSON(event):
+						fmt.Printf("Sent match found event to player %s\n", playerID)
+						// Remove the channel from the map
+						delete(gm.matchingChannels, playerID)
+						// Close the channel
+						close(ch)
+						return true
+					default:
+						fmt.Printf("Failed to send event to player %s\n", playerID)
+						return false
+					}
 				}
+				return false
 			}
-			fmt.Println("Sending match found event to player", player2.ID)
-			if ch2, ok := gm.matchingChannels[player2.ID]; ok {
-				select {
-				case ch2 <- mustJSON(player2Event):
-					fmt.Println("Sent match found event to player", player2.ID)
-				default:
-					// Channel is blocked or closed, skip this notification
-					fmt.Println("Channel is blocked or closed, skipping match found event to player", player2.ID)
-				}
+
+			// Send to both players
+			if !sendEventAndCleanup(player1.ID, player1Event) {
+				successfullySentBoth = false
+			}
+			if !sendEventAndCleanup(player2.ID, player2Event) {
+				successfullySentBoth = false
+			}
+
+			// If we failed to notify both players, we might want to handle that
+			if !successfullySentBoth {
+				// Maybe add them back to queue or implement retry logic
+				fmt.Println("Failed to notify all players of match")
 			}
 		}
 		gm.mu.Unlock()
 	}
+}
+
+func (gm *GameManager) UnregisterMatchmakingChannel(playerID string) {
+	gm.mu.Lock()
+	defer gm.mu.Unlock()
+	fmt.Println("Unregistering matchmaking channel for player", playerID, "with channel", gm.matchingChannels[playerID])
+
+	// We don't close the channel here because it might be used by other goroutines
+	// The creator of the channel (HandleMatchmakingEvents) is responsible for closing it
+	delete(gm.matchingChannels, playerID)
 }
 
 // Helper function for JSON marshaling
@@ -148,14 +175,14 @@ func (gm *GameManager) GetGame(gameID string) (*model.Game, error) {
 	return game, nil
 }
 
-func (gm *GameManager) AddPlayerToGame(gameID string, playerID string) (string, error) {
+func (gm *GameManager) AddPlayerToGame(gameID string, playerID string) (model.PlayerColor, error) {
 	fmt.Println("Adding player to game", gameID, playerID)
 	gm.mu.Lock()
 	defer gm.mu.Unlock()
 
 	game, exists := gm.games[gameID]
 	if !exists {
-		return "", errors.New("game not found")
+		return model.PlayerColor(""), errors.New("game not found")
 	}
 
 	return game.AddPlayer(playerID)

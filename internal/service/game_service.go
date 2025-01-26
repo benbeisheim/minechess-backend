@@ -18,7 +18,7 @@ func NewGameService(gameManager *GameManager) *GameService {
 	}
 }
 
-func (gs *GameService) JoinGame(gameID string, playerID string) (string, error) {
+func (gs *GameService) JoinGame(gameID string, playerID string) (model.PlayerColor, error) {
 	return gs.gameManager.AddPlayerToGame(gameID, playerID)
 }
 
