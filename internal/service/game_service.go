@@ -33,6 +33,7 @@ func (gs *GameService) CreateGame() (string, error) {
 }
 
 func (gs *GameService) JoinMatchmaking(playerID string) error {
+	fmt.Println("Joining matchmaking for player in game service:", playerID)
 	return gs.gameManager.JoinMatchmaking(playerID)
 }
 

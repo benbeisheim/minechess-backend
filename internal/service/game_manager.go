@@ -191,6 +191,7 @@ func (gm *GameManager) AddPlayerToGame(gameID string, playerID string) (model.Pl
 func (gm *GameManager) JoinMatchmaking(playerID string) error {
 	gm.mu.Lock()
 	defer gm.mu.Unlock()
+	fmt.Println("Joining matchmaking for player in game manager:", playerID)
 
 	err := gm.queue.AddPlayer(model.Player{ID: playerID})
 	if err != nil {

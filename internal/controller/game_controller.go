@@ -76,6 +76,7 @@ func (gc *GameController) JoinMatchmaking(c *fiber.Ctx) error {
 			"error": "Failed to join matchmaking",
 		})
 	}
+	fmt.Println("Player added to matchmaking queue:", playerID)
 
 	return c.JSON(fiber.Map{
 		"status": "queued",
