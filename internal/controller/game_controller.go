@@ -69,6 +69,7 @@ func (gc *GameController) GetGameState(c *fiber.Ctx) error {
 
 func (gc *GameController) JoinMatchmaking(c *fiber.Ctx) error {
 	playerID := c.Locals("playerID").(string)
+	fmt.Println("Adding player to matchmaking queue:", playerID)
 
 	if err := gc.gameService.JoinMatchmaking(playerID); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{

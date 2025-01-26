@@ -194,6 +194,7 @@ func (gm *GameManager) JoinMatchmaking(playerID string) error {
 
 	err := gm.queue.AddPlayer(model.Player{ID: playerID})
 	if err != nil {
+		fmt.Println("Error adding player to matchmaking queue:", err)
 		return err
 	}
 
