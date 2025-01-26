@@ -46,6 +46,7 @@ type GameState struct {
 	PromotionSquare        *Position   `json:"promotionSquare"`        // Made nullable
 	PromotionPiece         *PieceType  `json:"promotionPiece"`         // Made nullable
 	Mine                   *Position   `json:"mine"`                   // Made nullable
+	LastMine               *Position   `json:"lastMine"`               // Made nullable
 	PendingMoveDestination *Position   `json:"pendingMoveDestination"` // Made nullable
 	LastMove               *SimpleMove `json:"lastMove"`               // Made nullable
 	Explosion              *Position   `json:"explosion"`              // Made nullable
@@ -103,6 +104,7 @@ func newGameState() GameState {
 		PromotionSquare: nil,
 		PromotionPiece:  nil,
 		Mine:            nil,
+		LastMine:        nil,
 		LastMove:        nil,
 		Explosion:       nil,
 	}
@@ -345,6 +347,10 @@ func (g *Game) executeMove(move WSMove) error {
 	}
 
 	// Set mine
+	if g.mine != nil {
+		mineCopy := *g.mine
+		g.state.LastMine = &mineCopy
+	}
 	g.mine = &move.Mine
 
 	// Switch turn
