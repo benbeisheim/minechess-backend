@@ -43,13 +43,15 @@ type GameState struct {
 		White ClientPlayer `json:"white"`
 		Black ClientPlayer `json:"black"`
 	} `json:"players"`
-	PromotionSquare        *Position   `json:"promotionSquare"`        // Made nullable
-	PromotionPiece         *PieceType  `json:"promotionPiece"`         // Made nullable
-	Mine                   *Position   `json:"mine"`                   // Made nullable
-	LastMine               *Position   `json:"lastMine"`               // Made nullable
-	PendingMoveDestination *Position   `json:"pendingMoveDestination"` // Made nullable
-	LastMove               *SimpleMove `json:"lastMove"`               // Made nullable
-	Explosion              *Position   `json:"explosion"`              // Made nullable
+	PromotionSquare          *Position   `json:"promotionSquare"`        // Made nullable
+	PromotionPiece           *PieceType  `json:"promotionPiece"`         // Made nullable
+	Mine                     *Position   `json:"mine"`                   // Made nullable
+	LastMine                 *Position   `json:"lastMine"`               // Made nullable
+	PendingMoveDestination   *Position   `json:"pendingMoveDestination"` // Made nullable
+	LastMove                 *SimpleMove `json:"lastMove"`               // Made nullable
+	Explosion                *Position   `json:"explosion"`              // Made nullable
+	WhiteKingAttackedSquares []Position  `json:"whiteKingAttackedSquares"`
+	BlackKingAttackedSquares []Position  `json:"blackKingAttackedSquares"`
 }
 
 type CapturedPieces struct {
@@ -101,12 +103,14 @@ func newGameState() GameState {
 				TimeLeft: 12000,
 			},
 		},
-		PromotionSquare: nil,
-		PromotionPiece:  nil,
-		Mine:            nil,
-		LastMine:        nil,
-		LastMove:        nil,
-		Explosion:       nil,
+		PromotionSquare:          nil,
+		PromotionPiece:           nil,
+		Mine:                     nil,
+		LastMine:                 nil,
+		LastMove:                 nil,
+		Explosion:                nil,
+		WhiteKingAttackedSquares: []Position{{X: 3, Y: 7}, {X: 5, Y: 7}, {X: 3, Y: 6}, {X: 4, Y: 6}, {X: 5, Y: 6}},
+		BlackKingAttackedSquares: []Position{{X: 3, Y: 0}, {X: 5, Y: 0}, {X: 3, Y: 1}, {X: 4, Y: 1}, {X: 5, Y: 1}},
 	}
 }
 
@@ -345,6 +349,9 @@ func (g *Game) executeMove(move WSMove) error {
 	} else {
 		g.state.Explosion = nil
 	}
+	// set king attacked squares
+	g.state.WhiteKingAttackedSquares = g.getKingAttackedSquares("white")
+	g.state.BlackKingAttackedSquares = g.getKingAttackedSquares("black")
 
 	// Set mine
 	if g.mine != nil {
@@ -378,6 +385,22 @@ func (g *Game) executeMove(move WSMove) error {
 	go g.broadcastState()
 
 	return nil
+}
+
+func (g *Game) getKingAttackedSquares(color string) []Position {
+	kingAttackedSquares := []Position{}
+	kingDirs := []Position{{X: 1, Y: 0}, {X: -1, Y: 0}, {X: 0, Y: 1}, {X: 0, Y: -1}, {X: 1, Y: 1}, {X: 1, Y: -1}, {X: -1, Y: 1}, {X: -1, Y: -1}}
+	kingPos := g.state.Board.WhiteKingPosition
+	if color == "black" {
+		kingPos = g.state.Board.BlackKingPosition
+	}
+	for _, dir := range kingDirs {
+		targetPos := Position{X: kingPos.X + dir.X, Y: kingPos.Y + dir.Y}
+		if boundaryCheck(targetPos) {
+			kingAttackedSquares = append(kingAttackedSquares, targetPos)
+		}
+	}
+	return kingAttackedSquares
 }
 
 func getOtherColor(color string) string {
