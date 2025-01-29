@@ -423,6 +423,10 @@ func isSquareAttacked(boardState *BoardState, attackingColor string, position Po
 	knightDirs := []Position{{X: 2, Y: 1}, {X: 2, Y: -1}, {X: -2, Y: 1}, {X: -2, Y: -1}, {X: 1, Y: 2}, {X: 1, Y: -2}, {X: -1, Y: 2}, {X: -1, Y: -2}}
 	kingDirs := []Position{{X: 1, Y: 0}, {X: -1, Y: 0}, {X: 0, Y: 1}, {X: 0, Y: -1}, {X: 1, Y: 1}, {X: 1, Y: -1}, {X: -1, Y: 1}, {X: -1, Y: -1}}
 	pawnDirs := []Position{{X: -1, Y: 1}, {X: 1, Y: 1}}
+	if attackingColor == "black" {
+		pawnDirs = []Position{{X: -1, Y: -1}, {X: 1, Y: -1}}
+	}
+
 	for _, dir := range rookDirs {
 		targetPos := Position{X: position.X + dir.X, Y: position.Y + dir.Y}
 		for boundaryCheck(targetPos) {
