@@ -432,6 +432,7 @@ func isSquareAttacked(boardState *BoardState, attackingColor string, position Po
 	if attackingColor == "black" {
 		pawnDirs = []Position{{X: -1, Y: -1}, {X: 1, Y: -1}}
 	}
+
 	for _, dir := range rookDirs {
 		targetPos := Position{X: position.X + dir.X, Y: position.Y + dir.Y}
 		for boundaryCheck(targetPos) {
