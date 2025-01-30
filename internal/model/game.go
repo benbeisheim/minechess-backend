@@ -285,7 +285,7 @@ func (g *Game) executeMove(move WSMove) error {
 	// clear last turns sounds
 	g.state.Sound = ""
 	// add sound to move history
-	if g.mine != nil && move.To.X == g.mine.X && move.To.Y == g.mine.Y {
+	if g.mine != nil && move.To.X == g.mine.X && move.To.Y == g.mine.Y && g.state.Board.Board[move.To.Y][move.To.X].Type != Pawn {
 		g.state.Sound = "explosion"
 	} else if g.state.Board.Board[move.To.Y][move.To.X] != nil {
 		g.state.Sound = "capture"
