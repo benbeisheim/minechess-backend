@@ -289,6 +289,12 @@ func (g *Game) executeMove(move WSMove) error {
 		g.state.Sound = "explosion"
 	} else if g.state.Board.Board[move.To.Y][move.To.X] != nil {
 		g.state.Sound = "capture"
+		switch g.state.ToMove {
+		case "white":
+			g.state.CapturedPieces.White = append(g.state.CapturedPieces.White, *g.state.Board.Board[move.To.Y][move.To.X])
+		case "black":
+			g.state.CapturedPieces.Black = append(g.state.CapturedPieces.Black, *g.state.Board.Board[move.To.Y][move.To.X])
+		}
 	} else {
 		g.state.Sound = "move"
 	}
@@ -423,6 +429,9 @@ func isSquareAttacked(boardState *BoardState, attackingColor string, position Po
 	knightDirs := []Position{{X: 2, Y: 1}, {X: 2, Y: -1}, {X: -2, Y: 1}, {X: -2, Y: -1}, {X: 1, Y: 2}, {X: 1, Y: -2}, {X: -1, Y: 2}, {X: -1, Y: -2}}
 	kingDirs := []Position{{X: 1, Y: 0}, {X: -1, Y: 0}, {X: 0, Y: 1}, {X: 0, Y: -1}, {X: 1, Y: 1}, {X: 1, Y: -1}, {X: -1, Y: 1}, {X: -1, Y: -1}}
 	pawnDirs := []Position{{X: -1, Y: 1}, {X: 1, Y: 1}}
+	if attackingColor == "black" {
+		pawnDirs = []Position{{X: -1, Y: -1}, {X: 1, Y: -1}}
+	}
 	for _, dir := range rookDirs {
 		targetPos := Position{X: position.X + dir.X, Y: position.Y + dir.Y}
 		for boundaryCheck(targetPos) {
