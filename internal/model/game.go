@@ -281,34 +281,62 @@ func (g *Game) validateMove(move WSMove) error {
 }
 
 func (g *Game) executeMove(move WSMove) error {
-	ply := g.makePly(move)
-	// clear last turns sounds
-	g.state.Sound = ""
-	// add sound to move history
-	if g.mine != nil && move.To.X == g.mine.X && move.To.Y == g.mine.Y && g.state.Board.Board[move.To.Y][move.To.X].Type != Pawn {
-		g.state.Sound = "explosion"
-	} else if g.state.Board.Board[move.To.Y][move.To.X] != nil {
-		g.state.Sound = "capture"
-		switch g.state.ToMove {
-		case "white":
-			g.state.CapturedPieces.White = append(g.state.CapturedPieces.White, *g.state.Board.Board[move.To.Y][move.To.X])
-		case "black":
-			g.state.CapturedPieces.Black = append(g.state.CapturedPieces.Black, *g.state.Board.Board[move.To.Y][move.To.X])
-		}
-	} else {
-		g.state.Sound = "move"
+	// Initial state validation
+	if g.state.Board == nil {
+		return fmt.Errorf("invalid game state: board is nil")
 	}
-	// Move the piece
+	if g.state.Board.Board == nil {
+		return fmt.Errorf("invalid game state: board array is nil")
+	}
+
+	// Validate move coordinates
+	if !isValidPosition(move.From) || !isValidPosition(move.To) {
+		return fmt.Errorf("invalid move coordinates: from %v to %v", move.From, move.To)
+	}
+
+	// Get piece at source position
 	piece := g.state.Board.Board[move.From.Y][move.From.X]
+	if piece == nil {
+		return fmt.Errorf("no piece at source position %v", move.From)
+	}
+
+	ply := g.makePly(move)
+	g.state.Sound = "" // clear last turns sounds
+
+	// Handle explosion/capture sound logic
+	if g.mine != nil && move.To.X == g.mine.X && move.To.Y == g.mine.Y && piece.Type != Pawn {
+		g.state.Sound = "explosion"
+	} else {
+		targetPiece := g.state.Board.Board[move.To.Y][move.To.X]
+		if targetPiece != nil {
+			g.state.Sound = "capture"
+			switch g.state.ToMove {
+			case "white":
+				g.state.CapturedPieces.White = append(g.state.CapturedPieces.White, *targetPiece)
+			case "black":
+				g.state.CapturedPieces.Black = append(g.state.CapturedPieces.Black, *targetPiece)
+			default:
+				return fmt.Errorf("invalid turn state: %s", g.state.ToMove)
+			}
+		} else {
+			g.state.Sound = "move"
+		}
+	}
+
+	// Move the piece
 	g.state.Board.Board[move.From.Y][move.From.X] = nil
 	g.state.Board.Board[move.To.Y][move.To.X] = piece
-	// Set hasMoved to true
-	g.state.Board.Board[move.To.Y][move.To.X].HasMoved = true
-	// If promotion, change piece type
+
+	// Update piece state
+	piece.HasMoved = true
+	piece.Position = move.To
+
+	// Handle promotion
 	if move.Promotion != "" {
-		g.state.Board.Board[move.To.Y][move.To.X].Type = move.Promotion
+		piece.Type = move.Promotion
 	}
-	// if king move, handle castle and update king position
+
+	// Handle special moves based on piece type
 	if piece.Type == King {
 		ply = g.handleCastle(move, ply)
 		switch g.state.ToMove {
@@ -317,37 +345,37 @@ func (g *Game) executeMove(move WSMove) error {
 		case "black":
 			g.state.Board.BlackKingPosition = move.To
 		}
-	}
-	// If en passant, handle en passant
-	if piece.Type == Pawn {
+	} else if piece.Type == Pawn {
 		ply = g.handleEnPassant(move, ply)
 	}
 
-	// Add the ply to the move history
+	// Update move history
 	if g.state.ToMove == "white" {
-		// If white moved, add Move
-		g.state.MoveHistory = append(g.state.MoveHistory, Move{
-			WhitePly: ply,
-		})
+		g.state.MoveHistory = append(g.state.MoveHistory, Move{WhitePly: ply})
 	} else {
-		// If black moved, add BlackPly to the last Move
+		if len(g.state.MoveHistory) == 0 {
+			return fmt.Errorf("invalid move history state: no moves exist for black's turn")
+		}
 		lastIdx := len(g.state.MoveHistory) - 1
 		g.state.MoveHistory[lastIdx].BlackPly = ply
 	}
 
-	// Update moved pieces position
-	g.state.Board.Board[move.To.Y][move.To.X].Position = move.To
-
-	// If non-king non pawn piece landed on mine, remove piece and check for bombmate
+	// Handle explosion logic
 	if g.mine != nil && move.To.X == g.mine.X && move.To.Y == g.mine.Y && piece.Type != King && piece.Type != Pawn {
 		g.state.Explosion = &move.To
-		switch g.state.ToMove {
-		case "white":
-			g.state.CapturedPieces.White = append(g.state.CapturedPieces.White, *g.state.Board.Board[move.To.Y][move.To.X])
-		case "black":
-			g.state.CapturedPieces.Black = append(g.state.CapturedPieces.Black, *g.state.Board.Board[move.To.Y][move.To.X])
+
+		// Get piece before nullifying for capture list
+		if targetPiece := g.state.Board.Board[move.To.Y][move.To.X]; targetPiece != nil {
+			switch g.state.ToMove {
+			case "white":
+				g.state.CapturedPieces.White = append(g.state.CapturedPieces.White, *targetPiece)
+			case "black":
+				g.state.CapturedPieces.Black = append(g.state.CapturedPieces.Black, *targetPiece)
+			}
 		}
+
 		g.state.Board.Board[move.To.Y][move.To.X] = nil
+
 		if isKingInCheck(g.state.Board, g.state.ToMove) {
 			result := getOtherColor(g.state.ToMove) + " wins by Bombmate"
 			g.state.Resolve = &result
@@ -355,42 +383,48 @@ func (g *Game) executeMove(move WSMove) error {
 	} else {
 		g.state.Explosion = nil
 	}
-	// set king attacked squares
+
+	// Update king attack squares
 	g.state.WhiteKingAttackedSquares = g.getKingAttackedSquares("white")
 	g.state.BlackKingAttackedSquares = g.getKingAttackedSquares("black")
 
-	// Set mine
+	// Update mine state
 	if g.mine != nil {
 		mineCopy := *g.mine
 		g.state.LastMine = &mineCopy
 	}
 	g.mine = &move.Mine
 
-	// Switch turn
+	// Switch turn and check game state
 	g.switchTurn()
-	// Check if opponent king is in check after move
 	g.state.IsCheck = isKingInCheck(g.state.Board, g.state.ToMove)
-	// Check if game is over
+
 	if g.isNoLegalMoves(g.state.ToMove) {
-		switch g.state.IsCheck {
-		case true:
+		if g.state.IsCheck {
 			result := getOtherColor(g.state.ToMove) + " wins by Checkmate"
 			g.state.Resolve = &result
-		case false:
+		} else {
 			result := "draw by Stalemate"
 			g.state.Resolve = &result
 		}
 	}
-	// If king in check, set check sound
+
+	// Update sound if in check
 	if g.state.IsCheck {
 		g.state.Sound = "check"
 	}
-	// Set lastMove
-	g.state.LastMove = &SimpleMove{From: move.From, To: move.To}
+
+	// Set last move
+	lastMove := SimpleMove{From: move.From, To: move.To}
+	g.state.LastMove = &lastMove
 
 	go g.broadcastState()
 
 	return nil
+}
+
+func isValidPosition(pos Position) bool {
+	return pos.X >= 0 && pos.X < 8 && pos.Y >= 0 && pos.Y < 8
 }
 
 func (g *Game) getKingAttackedSquares(color string) []Position {
