@@ -368,9 +368,9 @@ func (g *Game) executeMove(move WSMove) error {
 		if targetPiece := g.state.Board.Board[move.To.Y][move.To.X]; targetPiece != nil {
 			switch g.state.ToMove {
 			case "white":
-				g.state.CapturedPieces.Black = append(g.state.CapturedPieces.White, *targetPiece)
+				g.state.CapturedPieces.Black = append(g.state.CapturedPieces.Black, *targetPiece)
 			case "black":
-				g.state.CapturedPieces.White = append(g.state.CapturedPieces.Black, *targetPiece)
+				g.state.CapturedPieces.White = append(g.state.CapturedPieces.White, *targetPiece)
 			}
 		}
 
