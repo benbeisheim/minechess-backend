@@ -18,7 +18,7 @@ func main() {
 
 	app := fiber.New()
 
-	// Get environment variables
+	// Get environment variabless
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "3000" // default port for local development
